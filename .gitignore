@@ -47,3 +47,5 @@ client/gulp/dev-token.js
 
 # Ignore Byebug command history file.
 .byebug_history
+
+/audio_splitter/output/*

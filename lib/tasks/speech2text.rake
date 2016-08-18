@@ -10,13 +10,13 @@ namespace :speech2text do
     min_silence_len = args.min_silence_len || 200
     silence_thresh = args.silence_thresh || -29
 
-    parse_audio_with_python = "python #{Rails.root}/sound_splitter/src/sound_splitter.py #{min_silence_len} #{silence_thresh}"
+    parse_audio_with_python = "python #{Rails.root}/audio_splitter/src/audio_splitter.py #{min_silence_len} #{silence_thresh}"
     system(parse_audio_with_python)
   end
 
   task :audio_to_text, [:files_to_process_count] => :environment do |t, args|
     files_to_process = args.files_to_process_count.to_i || 1
-    all_sound_files = Dir.glob(Rails.root + 'sound_splitter/output/*')
+    all_sound_files = Dir.glob(Rails.root + 'audio_splitter/output/*')
 
     raise 'There are no files in output folder!' if all_sound_files.blank?
 
