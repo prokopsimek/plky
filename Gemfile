@@ -47,8 +47,11 @@ end
 # Windows does not include zoneinfo files, so bundle the tzinfo-data gem
 gem 'tzinfo-data', platforms: [:mingw, :mswin, :x64_mingw, :jruby]
 
-gem 'gcloud', git: 'https://github.com/GoogleCloudPlatform/gcloud-ruby'
-gem 'google-cloud-speech', git: 'https://github.com/GoogleCloudPlatform/gcloud-ruby.git'
-gem 'awesome_print'
+gem 'dotenv'
 
-gem 'speech2text'
+# gem 'gcloud', git: 'https://github.com/GoogleCloudPlatform/gcloud-ruby'
+# gem 'google-cloud-speech', git: 'https://github.com/GoogleCloudPlatform/gcloud-ruby.git'
+gem 'awesome_print'
+gem 'httparty'
+
+ruby '2.3.1'

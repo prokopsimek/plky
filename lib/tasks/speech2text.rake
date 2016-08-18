@@ -1,51 +1,71 @@
 desc "This is rake task for speech2text"
 
 namespace :speech2text do
-  task :test => :environment do
+
+  task :test, [:any_arg, :any_arg_sec] => :environment do |t, args|
+    ap args
+  end
+
+  task :split_input, [:min_silence_len, :silence_thresh] => :environment do |t, args|
+    min_silence_len = args.min_silence_len || 200
+    silence_thresh = args.silence_thresh || -29
+
+    parse_audio_with_python = "python #{Rails.root}/sound_splitter/src/sound_splitter.py #{min_silence_len} #{silence_thresh}"
+    system(parse_audio_with_python)
+  end
+
+  task :audio_to_text, [:files_to_process_count] => :environment do |t, args|
+    files_to_process = args.files_to_process_count.to_i || 1
     all_sound_files = Dir.glob(Rails.root + 'sound_splitter/output/*')
-    ap all_sound_files
-    all_sound_files.each do |sound_file|
-      audio = Speech::AudioToText.new(sound_file)
-      ap "========================="
-      ap "==========AUDIO=========="
-      ap "========================="
-      ap audio.to_text.inspect
-      ap "========================="
+
+    raise 'There are no files in output folder!' if all_sound_files.blank?
+
+    all_sound_files.first(files_to_process).each do |file_path|
+      ap "====== START of parsing ======"
+      ap "Processing file: #{file_path}"
+      one_audio_speech_to_text(file_path)
     end
 
-    ap "Processed #{all_sound_files.size} files"
-
   end
 
-  task :test_gcloud => :environment do
-    require "google/cloud/speech"
-    gcloud = Google::Cloud.new "speech2text@test-23f9c.iam.gserviceaccount.com", "#{Rails.root}/config/gauth.json"
+  def one_audio_speech_to_text(file_path)
+    json_body = {
+      config: {
+        encoding: "FLAC",
+        sample_rate: 44100,
+        languageCode: 'cs-cz',
+        profanityFilter: 'false'
+      },
+      audio: {
+        content: Base64.strict_encode64(File.read(file_path))
+      }
+    }
 
-    gcloud.speech(scope: "https://www.googleapis.com/auth/cloud-platform")
-    # all_sound_files = Dir.glob(Rails.root + 'sound_splitter/output/*')
-    # ap all_sound_files
-    # all_sound_files.each do |sound_file|
-    #   audio = Speech::AudioToText.new(sound_file)
-    #   ap "========================="
-    #   ap "==========AUDIO=========="
-    #   ap "========================="
-    #   ap audio.to_text.inspect
-    #   ap "========================="
-    # end
+    response = HTTParty.post(
+      "https://speech.googleapis.com/v1beta1/speech:syncrecognize?key=#{ENV.fetch('GOOGLE_API_BROWSER_KEY')}",
+      headers: {
+        'Content-Type' => 'application/json'
+      },
+      body: json_body.to_json
+    )
 
-    # ap "Processed #{all_sound_files.size} files"
-    ap gcloud
-  end
+    result_json = JSON.parse(response.body)
 
-  task :new => :environment do
-    recognizer = Pocketsphinx::AudioFileSpeechRecognizer.new
-
-    all_sound_files = Dir.glob(Rails.root + 'sound_splitter/input/*')
-    ap all_sound_files
-    all_sound_files.each do |sound_file|
-      recognizer.recognize(sound_file) do |speech|
-        ap speech # => "go forward ten meters"
+    if result_json['error']
+      ap result_json['error']
+    else
+      begin
+        ap "Transcripted text: '#{result_json['results'].first['alternatives'].first['transcript']}'"
+        ap "Confidence: #{result_json['results'].first['alternatives'].first['confidence']}"
+        ap "====== END of parsing ======"
+        puts
+        puts
+      rescue => error
+        ap "Something bad happened :-("
+        ap result_json
+        raise error
       end
     end
+
   end
 end
