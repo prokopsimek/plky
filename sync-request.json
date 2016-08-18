@@ -1,0 +1,8 @@
+{
+  "config": {
+    "encoding":"LINEAR16","sample_rate": 44100
+  },
+  "audio": {
+    "uri":"gs://prokopsimek/arthur.mp3"
+  }
+}
