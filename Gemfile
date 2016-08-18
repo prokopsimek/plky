@@ -51,4 +51,4 @@ gem 'gcloud', git: 'https://github.com/GoogleCloudPlatform/gcloud-ruby'
 gem 'google-cloud-speech', git: 'https://github.com/GoogleCloudPlatform/gcloud-ruby.git'
 gem 'awesome_print'
 
-gem 'pocketsphinx-ruby'
+gem 'speech2text'
