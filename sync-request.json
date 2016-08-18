@@ -3,8 +3,9 @@
     "encoding":"FLAC",
     "sample_rate": 16000,
     "languageCode": 'cs-cz',
+    "profanityFilter": 'true'
   },
   "audio": {
-    "uri":"gs://prokopsimek/longer.flac"
+    "uri":"gs://prokopsimek/kunda.flac"
   }
 }
