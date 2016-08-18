@@ -5,6 +5,6 @@
     "languageCode": 'cs-cz',
   },
   "audio": {
-    "uri":"gs://prokopsimek/16000.flac"
+    "uri":"gs://prokopsimek/longer.flac"
   }
 }
