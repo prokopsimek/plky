@@ -1,12 +1,10 @@
 {
   "config": {
     "encoding":"FLAC",
-    "sample_rate": 44100,
-    "language_code": "cs-CZ"
+    "sample_rate": 16000,
+    "languageCode": 'cs-cz',
   },
   "audio": {
-    "uri":"gs://prokopsimek/example.flac"
+    "uri":"gs://prokopsimek/16000.flac"
   }
 }
-
-
