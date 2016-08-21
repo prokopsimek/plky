@@ -7,28 +7,31 @@ namespace :speech2text do
   end
 
   task :split_input, [:min_silence_len, :silence_thresh] => :environment do |t, args|
-    min_silence_len = args.min_silence_len || 200
-    silence_thresh = args.silence_thresh || -29
-
-    parse_audio_with_python = "python #{Rails.root}/audio_splitter/src/audio_splitter.py #{min_silence_len} #{silence_thresh}"
+    parse_audio_with_python = "python #{Rails.root}/audio_splitter/src/audio_splitter.py"
     system(parse_audio_with_python)
   end
 
-  task :audio_to_text, [:files_to_process_count] => :environment do |t, args|
-    files_to_process = args.files_to_process_count.to_i || 1
+  task :audio_to_text => :environment do
     all_sound_files = Dir.glob(Rails.root + 'audio_splitter/output/*')
-
     raise 'There are no files in output folder!' if all_sound_files.blank?
+
+    STDOUT.puts "How many files do you want to transcript? (Output files: #{all_sound_files.size})"
+    files_to_process = STDIN.gets.strip.to_i
+
+    result_array = []
 
     all_sound_files.first(files_to_process).each do |file_path|
       ap "====== START of parsing ======"
       ap "Processing file: #{file_path}"
-      one_audio_speech_to_text(file_path)
+      result_array << one_audio_speech_to_text(file_path)
     end
 
+    ap result_array
   end
 
   def one_audio_speech_to_text(file_path)
+    result_hash = { 'name' => file_path.split('/').last }
+
     json_body = {
       config: {
         encoding: "FLAC",
@@ -55,16 +58,33 @@ namespace :speech2text do
       ap result_json['error']
     else
       begin
-        ap "Transcripted text: '#{result_json['results'].first['alternatives'].first['transcript']}'"
-        ap "Confidence: #{result_json['results'].first['alternatives'].first['confidence']}"
+        transcripted_text = result_json['results'].first['alternatives'].first['transcript']
+        confidence = result_json['results'].first['alternatives'].first['confidence']
+        ap "Transcripted text: '#{transcripted_text}'"
+        ap "Confidence: #{confidence}"
         ap "====== END of parsing ======"
         puts
         puts
+        splitted_path = file_path.split('/')
+
+        File.rename(
+          file_path,
+          splitted_path[0...-1].join('/').to_s + "/#{transcripted_text.to_s.parameterize.downcase}.#{file_path.split('.').last}"
+        )
+
+        result_hash['transcripted_text'] = transcripted_text
+        result_hash['confidence'] = confidence
       rescue => error
         ap "Something bad happened :-("
         ap result_json
-        raise error
+        err_msg = error.to_s.first(100)
+        ap err_msg
+        ap result_json.to_s.first(300)
+        result_hash['error'] = err_msg
+        result_hash['result_json'] = result_json.to_s.first(300)
       end
+
+      result_hash
     end
 
   end

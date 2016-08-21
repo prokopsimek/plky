@@ -4,17 +4,23 @@ import os
 import sys
 import glob
 
-print 'Number of arguments:', len(sys.argv), 'arguments.'
-print 'Argument List:', str(sys.argv)
-
 ROOT_DIR = os.path.dirname(os.path.dirname(__file__))
 INPUT_FOLDER = os.path.join(ROOT_DIR, 'input/')
 OUTPUT_FOLDER = os.path.join(ROOT_DIR, 'output/')
 
-set_min_silence_len = int(str(sys.argv[1]) or 200)
-set_silence_thresh = int(str(sys.argv[2]) or -29)
 
-video_dir = '/home/johndoe/downloaded_videos/'  # Path where the videos are located
+input_set_min_silence_len = raw_input("Set 'min_silence_len' (default: 200):")
+set_min_silence_len = int(input_set_min_silence_len or 200)
+print "Value 'set_min_silence_len':", set_min_silence_len
+
+input_set_silence_thresh = raw_input("Set 'silence_thresh' (default: -16):")
+set_silence_thresh = int(input_set_silence_thresh or -16)
+print "Value 'set_silence_thresh':", set_silence_thresh
+
+input_set_keep_silence = raw_input("Set 'keep_silence' (default: 200):")
+set_keep_silence = int(input_set_keep_silence or 200)
+print "Value 'set_keep_silence':", set_keep_silence
+
 extension_list = ('*.mp4', '*.flv', '*.flac', '*.mp3', '*.wma')
 
 os.chdir(OUTPUT_FOLDER)
@@ -29,12 +35,22 @@ for extension in extension_list:
 	print 'Splitting file', audio
 	
 	sound_file = AudioSegment.from_file(os.path.join(INPUT_FOLDER, audio))
+
+	print "dBFS of file:", sound_file.dBFS
+	input_set_dbfs = raw_input("Set 'dbfs' (now: " + str(set_silence_thresh) + "):")
+	set_silence_thresh = int(input_set_dbfs or set_silence_thresh)
+	print "Value 'set_dbfs':", set_silence_thresh
+
 	audio_chunks = split_on_silence(sound_file, 
-	    # must be silent for at least half a second
+	    # (in ms) minimum length of a silence to be used for a split. default: 1000ms
 	    min_silence_len = set_min_silence_len,
 
-	    # consider it silent if quieter than -16 dBFS
-	    silence_thresh = set_silence_thresh
+	    # (in dBFS) anything quieter than this will be considered silence. default: -16dBFS
+	    silence_thresh = set_silence_thresh,
+
+	    # (in ms) amount of silence to leave at the beginning and end of the chunks. 
+	    # Keeps the sound from sounding like it is abruptly cut off. (default: 100ms)
+	    keep_silence = set_keep_silence
 	)
 
 	for i, chunk in enumerate(audio_chunks):
